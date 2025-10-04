@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <div class="popup-header">
+      <h1>Dictionary Lookup</h1>
+    </div>
+    
+    <div class="search-section">
+      <div class="search-input-container">
+        <input type="text" id="wordInput" placeholder="Enter a word to lookup.." maxlength="50">
+        <button id="searchBtn" title="Search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="results" class="results-section">
+      <div class="welcome-message">
+        <p>Enter a word above to see its definition, or select text on any webpage and right-click to look it up.</p>
+        <div class="features">
+          <div class="feature">
+            <strong>Right-click menu:</strong> Select text and right-click for "Lookup word" option
+          </div>
+          <div class="feature">
+            <strong>Floating button:</strong> Select text to see a "Lookup" button appear
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-links">
+        <a href="https://dictionaryapi.dev" target="_blank" rel="noopener">Powered by DictionaryAPI.dev</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
