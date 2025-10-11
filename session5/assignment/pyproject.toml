@@ -1,0 +1,14 @@
+[project]
+name = "assignment"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "google-genai>=1.42.0",
+    "mcp[cli]>=1.17.0",
+    "pdt>=0.8.2.8",
+    "pillow>=11.3.0",
+    "pyautogui>=0.9.54",
+]
