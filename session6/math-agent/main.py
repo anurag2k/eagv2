@@ -31,7 +31,7 @@ async def main():
     state = {
         'iteration': 0,
         'history': [],
-        'max_iterations': 5
+        'max_iterations': 20 
     }
     user_query = "Add 5 and 4 and return square of the resultant value"
 
