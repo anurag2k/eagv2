@@ -1,5 +1,3 @@
-# memory.py
-
 def get_preferences(user_id: str) -> dict:
     """
     Retrieves user-specific preferences.
@@ -19,3 +17,4 @@ def get_preferences(user_id: str) -> dict:
     
     print("Memory: Preferences retrieved.")
     return preferences
+

@@ -1,17 +1,40 @@
-# action.py
-import subprocess
+import ast
 import traceback
+from mcp import ClientSession
+from models import AddInput, AddOutput, SqrtInput, SqrtOutput, StringsToIntsInput, StringsToIntsOutput, ExpSumInput, ExpSumOutput
 
-def activate_preview():
-    """Helper function to activate Preview.app (unused in main flow)."""
-    script = '''
-    tell application "Preview"
-        activate
-    end tell
-    '''
-    subprocess.run(["osascript", "-e", script])
+def parse_function_call_params(param_parts: list[str]) -> dict:
+    """
+    Parses key=value parts from the FUNCTION_CALL format.
+    Supports nested keys like input.string=foo and list values like input.int_list=[1,2,3]
+    Returns a nested dictionary.
+    """
+    print(f"Action: Parsing parameters: {param_parts}")
+    result = {}
 
-async def execute_action(decision: dict, mcp_session, tools: list) -> dict:
+    for part in param_parts:
+        if "=" not in part:
+            raise ValueError(f"Invalid parameter format (expected key=value): {part}")
+
+        key, value = part.split("=", 1)
+
+        # Try to parse as Python literal (int, float, list, etc.)
+        try:
+            parsed_value = ast.literal_eval(value)
+        except Exception:
+            parsed_value = value.strip() # Default to string
+
+        # Support nested keys like input.string
+        keys = key.split(".")
+        current = result
+        for k in keys[:-1]:
+            current = current.setdefault(k, {})
+        current[keys[-1]] = parsed_value
+    
+    print(f"Action: Parsed arguments: {result}")
+    return result
+
+async def execute_action(decision: dict, mcp_session: ClientSession, tools: list) -> dict:
     """
     Executes the action decided by the Decision module.
     Returns a result dictionary for the orchestrator.
@@ -33,32 +56,14 @@ async def execute_action(decision: dict, mcp_session, tools: list) -> dict:
             
             print(f"Action: Attempting to call function '{func_name}' with params {params_list}")
 
-            # --- Find the tool and build arguments ---
+            # --- Find the tool ---
             tool = next((t for t in tools if t.name == func_name), None)
             if not tool:
                 raise ValueError(f"Unknown tool: {func_name}")
 
-            arguments = {}
-            schema_properties = tool.inputSchema.get('properties', {})
-            
-            for param_name, param_info in schema_properties.items():
-                if not params_list:
-                    raise ValueError(f"Not enough parameters provided for {func_name}")
-                
-                value = params_list.pop(0)
-                param_type = param_info.get('type', 'string')
-                
-                # --- Type conversion based on schema ---
-                if param_type == 'integer':
-                    arguments[param_name] = int(value)
-                elif param_type == 'number':
-                    arguments[param_name] = float(value)
-                elif param_type == 'array':
-                    if isinstance(value, str):
-                        value = value.strip('[]').split(',')
-                    arguments[param_name] = [int(x.strip()) for x in value] # Assuming int array
-                else:
-                    arguments[param_name] = str(value)
+            # --- Parse key=value parameters ---
+            # This is the fix: using `params_list`
+            arguments = parse_function_call_params(params_list)
             
             # --- Call the MCP Tool ---
             print(f"Action: Calling MCP tool: {func_name} with args: {arguments}")
@@ -68,7 +73,8 @@ async def execute_action(decision: dict, mcp_session, tools: list) -> dict:
             tool_result_content = "N/A"
             if hasattr(result, 'content') and result.content:
                 if isinstance(result.content, list):
-                    tool_result_content = result.content[0].text
+                    # Handle list content, get text from first item
+                    tool_result_content = result.content[0].text if hasattr(result.content[0], 'text') else str(result.content[0])
                 else:
                     tool_result_content = str(result.content)
             
@@ -108,3 +114,4 @@ async def execute_action(decision: dict, mcp_session, tools: list) -> dict:
             'status': 'FATAL_ERROR',
             'history_entry': f"EXECUTION ERROR: {str(e)}"
         }
+

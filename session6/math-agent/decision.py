@@ -1,9 +1,10 @@
-# decision.py
 import asyncio
 import json
 from concurrent.futures import TimeoutError
+import google.generativeai as genai
+from models import AddInput, AddOutput, SqrtInput, SqrtOutput, StringsToIntsInput, StringsToIntsOutput, ExpSumInput, ExpSumOutput
 
-async def generate_with_timeout(client, prompt, timeout=10):
+async def generate_with_timeout(model: genai.GenerativeModel, prompt: str, timeout: int = 10):
     """Generate content with a timeout"""
     print("Decision: Starting LLM generation...")
     try:
@@ -11,8 +12,7 @@ async def generate_with_timeout(client, prompt, timeout=10):
         response = await asyncio.wait_for(
             loop.run_in_executor(
                 None,  
-                lambda: client.models.generate_content(
-                    model="gemini-2.0-flash",
+                lambda: model.generate_content( # Use the model directly
                     contents=prompt
                 )
             ),
@@ -58,7 +58,7 @@ def parse_llm_json_response(response_text: str) -> dict:
         print(f"Decision ERROR: Unexpected error during JSON parsing: {e}")
         return {"action_type": "ERROR", "action_call": "N/A", "status": "FATAL_ERROR"}
 
-async def make_decision(llm_prompt: str, preferences: dict, llm_client) -> dict:
+async def make_decision(llm_prompt: str, preferences: dict, llm_model: genai.GenerativeModel) -> dict:
     """
     Takes the facts (prompt) and preferences, invokes the LLM, 
     and parses the result into a structured decision.
@@ -70,7 +70,7 @@ async def make_decision(llm_prompt: str, preferences: dict, llm_client) -> dict:
     #   llm_prompt += "\nProvide extra verbose thoughts."
 
     try:
-        response = await generate_with_timeout(llm_client, llm_prompt)
+        response = await generate_with_timeout(llm_model, llm_prompt) # Pass the model instance
         response_text = response.text.strip()
         print(f"Decision: LLM Raw Response: {response_text}")
         
@@ -81,3 +81,5 @@ async def make_decision(llm_prompt: str, preferences: dict, llm_client) -> dict:
     except Exception as e:
         print(f"Decision: Failed to get LLM response: {e}")
         return {"action_type": "ERROR", "action_call": "N/A", "status": "FATAL_ERROR"}
+
+

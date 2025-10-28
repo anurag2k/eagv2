@@ -1,11 +1,11 @@
-# main.py
 import os
 import asyncio
 import traceback
 from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from google import genai
+import google.generativeai as genai
+from models import AddInput, AddOutput, SqrtInput, SqrtOutput, StringsToIntsInput, StringsToIntsOutput, ExpSumInput, ExpSumOutput
 
 # Import the new modules
 import perception
@@ -19,28 +19,32 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise EnvironmentError("GEMINI_API_KEY not found in .env file")
 
-# Initialize the Gemini client
-llm_client = genai.Client(api_key=API_KEY)
+# Configure the Gemini API
+genai.configure(api_key=API_KEY)
+# Initialize the generative model (passed to decision module)
+llm_model = genai.GenerativeModel(model_name="gemini-2.0-flash")
 
 
 async def main():
     print("Orchestrator: Starting main execution...")
     
     # 1. Initialize State
-    # Global variables are replaced by this state dictionary
+    # All global state is now managed here
     state = {
         'iteration': 0,
         'history': [],
-        'max_iterations': 20 
+        'max_iterations': 5
     }
     user_query = "Add 5 and 4 and return square of the resultant value"
 
     try:
         # 2. Initialize MCP Connection
         print("Orchestrator: Establishing connection to MCP server...")
+        # !! IMPORTANT: Update this path to your mcp-server2.py location
         server_params = StdioServerParameters(
             command="python",
-            args=["mcp-server2.py"] # Ensure this server file is accessible
+            args=["mcp-server2.py"],
+            cwd="/Users/anuagarwal/Documents/Personal/eagv2/session6/math-agent"
         )
 
         async with stdio_client(server_params) as (read, write):
@@ -77,7 +81,7 @@ async def main():
                     decided_action = await decision.make_decision(
                         facts['full_llm_prompt'], 
                         preferences, 
-                        llm_client
+                        llm_model # Pass the model instance
                     )
                     
                     # --- STAGE 4: ACTION ---
@@ -112,3 +116,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("\nOrchestrator: Execution cancelled by user.")
+
+

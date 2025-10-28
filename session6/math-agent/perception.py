@@ -1,21 +1,50 @@
-# perception.py
 import json
 
-def format_tool_description(tools) -> str:
+def _flatten_schema_properties(properties: dict, prefix: str = "") -> list[str]:
+    """
+    Recursively flattens a JSON schema's properties into a list of
+    dot-notation strings.
+    
+    Example:
+    "input": {
+        "type": "object",
+        "properties": {
+            "a": {"type": "integer"},
+            "b": {"type": "integer"}
+        }
+    }
+    Becomes:
+    ["input.a: integer", "input.b: integer"]
+    """
+    param_details = []
+    for param_name, param_info in properties.items():
+        param_type = param_info.get('type', 'unknown')
+        
+        if param_type == 'object' and 'properties' in param_info:
+            # Recurse with the new prefix
+            nested_prefix = f"{prefix}{param_name}."
+            param_details.extend(
+                _flatten_schema_properties(param_info['properties'], nested_prefix)
+            )
+        else:
+            # Base case: add the flattened property
+            param_details.append(f"{prefix}{param_name}: {param_type}")
+            
+    return param_details
+
+def format_tool_description(tools: list) -> str:
     """Converts the MCP tool list into a human-readable string for the prompt."""
     print("Perception: Formatting tool descriptions...")
     tools_description = []
     for i, tool in enumerate(tools):
         try:
-            params = tool.inputSchema
+            params_schema = tool.inputSchema
             desc = getattr(tool, 'description', 'No description available')
             name = getattr(tool, 'name', f'tool_{i}')
             
-            if 'properties' in params:
-                param_details = []
-                for param_name, param_info in params['properties'].items():
-                    param_type = param_info.get('type', 'unknown')
-                    param_details.append(f"{param_name}: {param_type}")
+            if 'properties' in params_schema:
+                # Use the new recursive flattener
+                param_details = _flatten_schema_properties(params_schema['properties'])
                 params_str = ', '.join(param_details)
             else:
                 params_str = 'no parameters'
@@ -33,6 +62,8 @@ def build_system_prompt(tools_description: str) -> str:
     print("Perception: Building system prompt...")
     
     # This is the core instruction set for the LLM
+    # CRITICAL: action.call is updated to use key=value pairs
+    # and explicitly mentions dot-notation for nested objects.
     system_prompt = f"""You are a Structured Mathematical Reasoning Agent. Your goal is to solve complex problems in iterations by applying step-by-step reasoning, utilizing available tools, and adhering to a strict output format.
 
 Available tools:
@@ -57,7 +88,11 @@ Instructional Breakdown:
 - thought: Detailed, step-by-step explanation of your current logic.
 - internal_check: Self-validation, e.g., 'Passed: parameters look correct' or 'Revised: [What was fixed]'.
 - action.type: [FUNCTION_CALL, FINAL_ANSWER, NO_ACTION].
-- action.call: The command string (e.g., 'add|5|3') or the final answer (e.g., '[42]'). Use 'N/A' for NO_ACTION.
+- action.call: The command string using key=value pairs.
+    - For simple parameters: 'tool_name|param1=value1|param2=value2'
+    - For nested parameters (e.g., 'input.a'): 'tool_name|input.a=5|input.b=4'
+    - For the final answer: '[42]'
+    - Use 'N/A' for NO_ACTION.
 - status: [IN_PROGRESS, DONE, UNCERTAIN_RETRY, FATAL_ERROR]. Use FATAL_ERROR only if the problem is unsolvable.
 """
     return system_prompt
@@ -65,7 +100,7 @@ Instructional Breakdown:
 def perceive(user_query: str, state: dict, system_prompt: str) -> dict:
     """
     Gathers all facts (query, history, system prompt) and generates the 
-    JSON object (as requested) containing the final prompt for the LLM.
+    JSON object containing the final prompt for the LLM.
     """
     print(f"Perception: Gathering facts for iteration {state['iteration'] + 1}...")
     
@@ -87,9 +122,11 @@ def perceive(user_query: str, state: dict, system_prompt: str) -> dict:
         "user_query": user_query,
         "context_update": context_update,
         "system_prompt": system_prompt,
-        "full_llm_prompt": full_llm_prompt
+        "full_llm_prompt": full_llm_prompt,
+        "current_iteration": state['iteration']
     }
     
     print("Perception: Facts gathered and prompt generated.")
-    # print(f"Perception: Generated prompt:\n{full_llm_prompt}") # Uncomment for debugging
     return facts_json
+
+
