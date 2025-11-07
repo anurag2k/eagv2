@@ -1,9 +1,11 @@
+import pydantic
 from pydantic import BaseModel
 from typing import Optional, List
 import os
 from dotenv import load_dotenv
 from google import genai
 import re
+import json
 
 # Optional: import log from agent if shared, else define locally
 try:
@@ -21,7 +23,7 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 class PerceptionResult(BaseModel):
     user_input: str
-    intent: Optional[str]
+    intent: Optional[str] = None
     entities: List[str] = []
     tool_hint: Optional[str] = None
 
@@ -54,9 +56,9 @@ Output only the dictionary on a single line. Do NOT wrap it in ```json or other 
         clean = re.sub(r"^```json|```$", "", raw.strip(), flags=re.MULTILINE).strip()
 
         try:
-            parsed = eval(clean)
-        except Exception as e:
-            log("perception", f"⚠️ Failed to parse cleaned output: {e}")
+            parsed = json.loads(clean)
+        except json.JSONDecodeError as e:
+            log("perception", f"⚠️ Failed to parse JSON output: {e}")
             raise
 
         # Fix common issues
@@ -68,4 +70,5 @@ Output only the dictionary on a single line. Do NOT wrap it in ```json or other 
 
     except Exception as e:
         log("perception", f"⚠️ Extraction failed: {e}")
+        # This fallback now works because 'intent' has a default value
         return PerceptionResult(user_input=user_input)

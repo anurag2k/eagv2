@@ -22,7 +22,8 @@ import hashlib
 mcp = FastMCP("Calculator")
 
 EMBED_URL = "http://localhost:11434/api/embeddings"
-EMBED_MODEL = "nomic-embed-text"
+#EMBED_MODEL = "nomic-embed-text"
+EMBED_MODEL = "qwen3-embedding:0.6b"
 CHUNK_SIZE = 256
 CHUNK_OVERLAP = 40
 ROOT = Path(__file__).parent.resolve()
@@ -51,7 +52,7 @@ def search_documents(query: str) -> list[str]:
         index = faiss.read_index(str(ROOT / "faiss_index" / "index.bin"))
         metadata = json.loads((ROOT / "faiss_index" / "metadata.json").read_text())
         query_vec = get_embedding(query).reshape(1, -1)
-        D, I = index.search(query_vec, k=5)
+        D, I = index.search(query_vec, k=10)
         results = []
         for idx in I[0]:
             data = metadata[idx]

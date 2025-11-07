@@ -76,6 +76,7 @@ IMPORTANT:
 - 🧠 Think before each step. Verify intermediate results mentally before proceeding.
 - 💥 If unsure or no tool fits, skip to FINAL_ANSWER: [unknown]
 - ✅ You have only 3 attempts. Final attempt must be FINAL_ANSWER]
+- If the question is related to people, named entities, use 'search_documents' tool to look for the answer
 """
 
     try:

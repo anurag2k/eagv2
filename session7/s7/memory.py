@@ -19,7 +19,7 @@ class MemoryItem(BaseModel):
 
 
 class MemoryManager:
-    def __init__(self, embedding_model_url="http://localhost:11434/api/embeddings", model_name="nomic-embed-text"):
+    def __init__(self, embedding_model_url="http://localhost:11434/api/embeddings", model_name="qwen3-embedding:0.6b"):
         self.embedding_model_url = embedding_model_url
         self.model_name = model_name
         self.index = None
@@ -47,7 +47,7 @@ class MemoryManager:
     def retrieve(
         self,
         query: str,
-        top_k: int = 3,
+        top_k: int = 5,
         type_filter: Optional[str] = None,
         tag_filter: Optional[List[str]] = None,
         session_filter: Optional[str] = None
@@ -56,7 +56,7 @@ class MemoryManager:
             return []
 
         query_vec = self._get_embedding(query).reshape(1, -1)
-        D, I = self.index.search(query_vec, top_k * 2)  # Overfetch to allow filtering
+        D, I = self.index.search(query_vec, top_k)  # Overfetch to allow filtering
 
         results = []
         for idx in I[0]:

@@ -27,7 +27,7 @@ async def main(user_input: str):
         server_params = StdioServerParameters(
             command="python",
             args=["example3.py"],
-            cwd="I:/TSAI/2025/EAG/Session 7/S7"
+            cwd="/Users/anuagarwal/Documents/Personal/eagv2/session7/s7"
         )
 
         try:
@@ -67,7 +67,7 @@ async def main(user_input: str):
                                 perception = extract_perception(user_input)
                                 log("perception", f"Intent: {perception.intent}, Tool hint: {perception.tool_hint}")
 
-                                retrieved = memory.retrieve(query=user_input, top_k=3, session_filter=session_id)
+                                retrieved = memory.retrieve(query=user_input, top_k=5, session_filter=session_id)
                                 log("memory", f"Retrieved {len(retrieved)} relevant memories")
 
                                 plan = generate_plan(perception, retrieved, tool_descriptions=tool_descriptions)
