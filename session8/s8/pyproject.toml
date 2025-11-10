@@ -3,7 +3,7 @@ name = "s8"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "asyncio>=3.4.3",
     "bs4>=0.0.2",
@@ -22,4 +22,9 @@ dependencies = [
     "rich>=14.0.0",
     "tqdm>=4.67.1",
     "trafilatura[all]>=2.0.0",
+    "google-auth>=2.27.0",
+    "google-auth-oauthlib>=1.1.0",
+    "google-api-python-client>=2.116.0",
+    "google>=3.0.0",
+    "gmail>=0.6.3",
 ]
