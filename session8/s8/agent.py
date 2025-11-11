@@ -5,6 +5,34 @@ import yaml
 from core.loop import AgentLoop
 from core.session import MultiMCP
 
+class CortexAgent:
+    def __init__(self):
+        pass
+    
+    async def process_input(self, user_input: str) -> str:
+        """Process input and return response"""
+        # Load MCP server configs from profiles.yaml
+        with open("config/profiles.yaml", "r") as f:
+            profile = yaml.safe_load(f)
+            mcp_servers = profile.get("mcp_servers", [])
+
+        multi_mcp = MultiMCP(server_configs=mcp_servers)
+        await multi_mcp.initialize()
+
+        agent = AgentLoop(
+            user_input=user_input,
+            dispatcher=multi_mcp
+        )
+
+        try:
+            final_response = await agent.run()
+            if not final_response or final_response.strip() == "":
+                return "Agent completed but no result generated."
+            return final_response.replace("FINAL_ANSWER:", "").strip()
+        except Exception as e:
+            return f"Agent error: {str(e)}"
+
+
 def log(stage: str, msg: str):
     """Simple timestamped console logger."""
     import datetime
