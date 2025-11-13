@@ -1,32 +1,4 @@
-<think>The user wants me to:
-1. Find all files and folders recursively in the repository 
-2. List all files first
-3. Use them as context to generate the architecture document
-4. Limit output to 400k tokens so they can copy/paste or apply it
-
-However, I cannot actually browse the file system or recursively search directories. I can only work with the files that have been provided to me in the conversation context. 
-
-The files I can see that have been shared are:
-1. core/context.py
-2. core/session.py  
-3. core/strategy.py
-4. modules/memory.py
-5. modules/perception.py
-6. modules/tools.py
-7. modules/model_manager.py (partial)
-8. modules/mcp_server_memory.py
-9. mcp_server_1.py
-10. mcp_server_2.py
-11. mcp_server_3.py (partial)
-12. models.py
-13. documents/markitdown.md
-14. documents/economic.md
-15. documents/dlf.md
-16. README.md
-17. README2.md
-
-I should list these files and then create a comprehensive but concise architecture document that fits within the token limit while covering all the key aspects.</think>
-I can only work with the files that have been provided to me in this conversation. I cannot actually browse the file system. Based on the files shared, here's what I can see:
+# Agentic System Architecture: LLM + RAG + MCP Integration
 
 ## Files Available in Repository Context:
 
